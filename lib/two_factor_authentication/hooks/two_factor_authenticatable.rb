@@ -1,7 +1,8 @@
 Warden::Manager.after_authentication do |user, auth, options|
   if auth.env["action_dispatch.cookies"]
     expected_cookie_value = "#{user.class}-#{user.public_send(Devise.second_factor_resource_id)}"
-    actual_cookie_value = auth.env["action_dispatch.cookies"].signed[TwoFactorAuthentication::REMEMBER_TFA_COOKIE_NAME]
+    name = TwoFactorAuthentication::remember_tfa_cookie_name(options[:scope])
+    actual_cookie_value = auth.env["action_dispatch.cookies"].signed[name]
     bypass_by_cookie = actual_cookie_value == expected_cookie_value
   end
 
@@ -12,6 +13,9 @@ Warden::Manager.after_authentication do |user, auth, options|
   end
 end
 
-Warden::Manager.before_logout do |user, auth, _options|
-  auth.cookies.delete TwoFactorAuthentication::REMEMBER_TFA_COOKIE_NAME if Devise.delete_cookie_on_logout
+Warden::Manager.before_logout do |user, auth, options|
+  if Devise.delete_cookie_on_logout
+    name = TwoFactorAuthentication::remember_tfa_cookie_name(options[:scope])
+    auth.cookies.delete name
+  end
 end

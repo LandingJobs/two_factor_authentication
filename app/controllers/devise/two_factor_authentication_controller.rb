@@ -43,9 +43,10 @@ class Devise::TwoFactorAuthenticationController < DeviseController
 
   def set_remember_two_factor_cookie(resource)
     expires_seconds = resource.class.remember_otp_session_for_seconds
+    scope = Devise::Mapping.find_scope!(resource)
 
     if expires_seconds && expires_seconds > 0
-      cookies.signed[TwoFactorAuthentication::REMEMBER_TFA_COOKIE_NAME] = {
+      cookies.signed[TwoFactorAuthentication::remember_tfa_cookie_name(scope)] = {
           value: "#{resource.class}-#{resource.public_send(Devise.second_factor_resource_id)}",
           expires: expires_seconds.from_now
       }
